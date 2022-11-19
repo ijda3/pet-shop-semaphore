@@ -102,11 +102,38 @@ int main() {
 // TODO
 //////////////////////////////////////////////////////////////
 
+int cCat, cDog = 0;
+std::mutex mCat, mDog;
+semaphore s(1), aux(1);
+
 void cat(int const id) {
     while (true) {
         do_stuff(id, "cat", "playing");
 
-        do_stuff(id, "cat", "eating");
+        aux.acquire();
+        mCat.lock();
+
+        if (cCat < MAX_PETS) {
+            cCat++;
+
+            if (cCat == 1) {
+                s.acquire();
+            }
+
+            mCat.unlock();
+            aux.release();
+
+            do_stuff(id, "cat", "eating");
+
+            mCat.lock();
+            cCat--;
+
+            if (cCat == 0) {
+                s.release();
+            }
+        }
+
+        mCat.unlock();
     }
 }
 
@@ -114,6 +141,29 @@ void dog(int const id) {
     while (true) {
         do_stuff(id, "dog", "playing");
 
-        do_stuff(id, "dog", "eating");
+        aux.acquire();
+        mDog.lock();
+
+        if (cDog < MAX_PETS) {
+            cDog++;
+
+            if (cDog == 1) {
+                s.acquire();
+            }
+
+            mDog.unlock();
+            aux.release();
+
+            do_stuff(id, "dog", "eating");
+
+            mDog.lock();
+            cDog--;
+
+            if (cDog == 0) {
+                s.release();
+            }
+        }
+
+        mDog.unlock();
     }
 }
